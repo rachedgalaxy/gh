@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { storage } from '../services/storage';
 import { AttendanceRecord, Class, STATUS_LABELS } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { FileBarChart, TrendingUp, Users, UserX, School, Calendar, Info, Building2, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { FileBarChart, TrendingUp, Users, UserX, School, Calendar, Info, Building2, CheckCircle2, ShieldCheck, User } from 'lucide-react';
 
 const Reports: React.FC = () => {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -46,6 +46,7 @@ const Reports: React.FC = () => {
   const selectedClass = classes.find(c => c.id === selectedClassId);
   const selectedClassName = selectedClassId === 'all' ? 'جميع الأقسام' : selectedClass?.name || '';
   const selectedSchoolName = selectedClassId === 'all' ? 'الجمهورية الجزائرية الديمقراطية الشعبية' : selectedClass?.schoolName || '';
+  const selectedTeacherName = selectedClassId === 'all' ? '..........................' : selectedClass?.teacherName || '..........................';
 
   const physicalPresenceCount = chartData
     .filter(d => d.statusKey === 'present' || d.statusKey === 'pe_kit')
@@ -89,7 +90,7 @@ const Reports: React.FC = () => {
         {/* Chart Card */}
         <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 min-h-[500px] flex flex-col">
           <h4 className="text-xl font-black text-slate-800 mb-8 border-b border-slate-50 pb-5 flex justify-between items-center">
-            <span className="flex items-center gap-2"><TrendingUp size={20} className="text-indigo-600" /> تحليل توزيع الحالات</span>
+            <span className="flex items-center gap-2"><TrendingUp size={20} className="text-indigo-600" /> توزيع الحالات بيانياً</span>
           </h4>
           
           {totalRecords > 0 ? (
@@ -131,22 +132,22 @@ const Reports: React.FC = () => {
           {/* Main Counter Card */}
           <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
             <div className="relative z-10">
-              <h4 className="text-xs font-black opacity-60 mb-2 uppercase tracking-widest">إجمالي الحضور والغياب</h4>
+              <h4 className="text-xs font-black opacity-60 mb-2 uppercase tracking-widest">إحصائيات {selectedClassName}</h4>
               <div className="flex items-end gap-3 mb-8">
                 <span className="text-6xl font-black">{totalRecords}</span>
-                <span className="text-lg font-bold mb-2 opacity-80 tracking-tight">إجمالي السجلات</span>
+                <span className="text-lg font-bold mb-2 opacity-80 tracking-tight">سجل حضور</span>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 p-5 rounded-3xl border border-white/10 backdrop-blur-md">
+                  <p className="text-[10px] font-black opacity-60 uppercase mb-1">الأستاذ المسؤول</p>
+                  <p className="text-xs font-black truncate">{selectedTeacherName}</p>
+                </div>
                 <div className="bg-white/10 p-5 rounded-3xl border border-white/10 backdrop-blur-md">
                   <p className="text-[10px] font-black opacity-60 uppercase mb-1">نسبة الانضباط</p>
                   <p className="text-2xl font-black">
                      {totalRecords > 0 ? ((physicalPresenceCount / totalRecords) * 100).toFixed(1) : 0}%
                   </p>
-                </div>
-                <div className="bg-white/10 p-5 rounded-3xl border border-white/10 backdrop-blur-md">
-                  <p className="text-[10px] font-black opacity-60 uppercase mb-1">الحضور الفعلي</p>
-                  <p className="text-2xl font-black">{physicalPresenceCount}</p>
                 </div>
               </div>
             </div>
@@ -177,7 +178,7 @@ const Reports: React.FC = () => {
             <div className="mt-8 p-5 bg-blue-50 rounded-2xl border border-blue-100 flex gap-4">
               <Info className="text-blue-600 shrink-0" size={20} />
               <p className="text-[10px] font-bold text-blue-900 leading-relaxed">
-                يتم احتساب هذه النسب بناءً على كافة المنادات المسجلة في قاعدة البيانات المحلية. الحالات (ب) و (ج) تؤثر مباشرة على المردود العام للقسم.
+                يتم احتساب هذه النسب بناءً على بيانات المنادات. الأستاذ المسؤول: {selectedTeacherName}
               </p>
             </div>
           </div>

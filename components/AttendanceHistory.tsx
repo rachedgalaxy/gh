@@ -83,7 +83,8 @@ const AttendanceHistory: React.FC = () => {
         ...student,
         records: (groups[student.id] || []).sort((a, b) => b.date.localeCompare(a.date)),
         className: classes.find(c => c.id === student.classId)?.name || 'قسم غير معروف',
-        schoolName: classes.find(c => c.id === student.classId)?.schoolName || ''
+        schoolName: classes.find(c => c.id === student.classId)?.schoolName || '',
+        teacherName: classes.find(c => c.id === student.classId)?.teacherName || '..........................'
       }));
   }, [students, classes, filteredAttendance, searchTerm, filterClass]);
 
@@ -94,6 +95,7 @@ const AttendanceHistory: React.FC = () => {
     const currentClass = filterClass !== 'all' ? classes.find(c => c.id === filterClass) : null;
     const currentClassName = currentClass ? currentClass.name : 'جميع الأقسام';
     const currentSchoolName = currentClass ? currentClass.schoolName : '';
+    const currentTeacherName = currentClass ? currentClass.teacherName : '..........................';
 
     let htmlContent = `
     <!DOCTYPE html>
@@ -123,7 +125,7 @@ const AttendanceHistory: React.FC = () => {
         <div class="header">
             <div class="school-name">${currentSchoolName || 'الجمهورية الجزائرية الديمقراطية الشعبية'}</div>
             <h1 style="font-size: 20px; margin: 10px 0;">سجل متابعة غيابات التلاميذ (ح، أ، ب، ج)</h1>
-            <p><strong>القسم:</strong> ${currentClassName} | <strong>الفترة:</strong> من ${filterDateStart || 'البداية'} إلى ${filterDateEnd || 'اليوم'}</p>
+            <p><strong>الأستاذ:</strong> ${currentTeacherName} | <strong>القسم:</strong> ${currentClassName}</p>
         </div>
         <table>
             <thead>
@@ -153,11 +155,11 @@ const AttendanceHistory: React.FC = () => {
             <span class="status-j">ج: غياب غير مبرر</span>
         </div>
         <div class="footer-info">
-            <span>توقيع الأستاذ: ..........................</span>
+            <span>توقيع الأستاذ (${currentTeacherName}): .................</span>
             <span>توقيع الإدارة: ..........................</span>
         </div>
         <div class="no-print" style="position: fixed; bottom: 20px; left: 20px;">
-            <button onclick="window.print()" style="padding:15px 30px; background:#1e293b; color:#fff; border:none; cursor:pointer; font-family:Cairo; font-weight:900; border-radius:12px; shadow: 0 10px 15px rgba(0,0,0,0.2);">إصدار أمر الطباعة</button>
+            <button onclick="window.print()" style="padding:15px 30px; background:#1e293b; color:#fff; border:none; cursor:pointer; font-family:Cairo; font-weight:900; border-radius:12px;">إصدار أمر الطباعة</button>
         </div>
     </body>
     </html>

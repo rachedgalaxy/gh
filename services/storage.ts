@@ -31,9 +31,10 @@ export const storage = {
       if (isInitialized === 'true') return [];
     } catch (e) {}
     
+    // Fix: Added missing 'teacherName' property to match Class interface definition
     return [
-      { id: 'c1', name: 'القسم الأول', schoolName: 'مدرسة النجاح الابتدائية', startTime: '08:00', endTime: '12:00', days: DEFAULT_DAYS },
-      { id: 'c2', name: 'القسم الثاني', schoolName: 'مدرسة النجاح الابتدائية', startTime: '13:00', endTime: '17:00', days: DEFAULT_DAYS }
+      { id: 'c1', name: 'القسم الأول', schoolName: 'مدرسة النجاح الابتدائية', teacherName: '..........................', startTime: '08:00', endTime: '12:00', days: DEFAULT_DAYS },
+      { id: 'c2', name: 'القسم الثاني', schoolName: 'مدرسة النجاح الابتدائية', teacherName: '..........................', startTime: '13:00', endTime: '17:00', days: DEFAULT_DAYS }
     ];
   },
   

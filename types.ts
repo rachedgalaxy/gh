@@ -17,6 +17,7 @@ export interface Class {
   id: string;
   name: string;
   schoolName: string;
+  teacherName: string; // الحقل الجديد
   startTime: string;
   endTime: string;
   days: string[];
