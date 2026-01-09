@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { storage } from '../services/storage';
 import { 
   Download, 
@@ -11,9 +11,9 @@ import {
   CheckCircle2,
   Eye,
   XCircle,
-  Github,
-  Globe,
-  Info
+  Info,
+  CalendarClock,
+  ShieldCheck
 } from 'lucide-react';
 
 const Settings: React.FC = () => {
@@ -21,7 +21,12 @@ const Settings: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [lastImportDate, setLastImportDate] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLastImportDate(storage.getLastImportDate());
+  }, []);
 
   const showStatus = (message: string, type: 'info' | 'success' | 'error') => {
     setStatus({ message, type });
@@ -92,8 +97,6 @@ const Settings: React.FC = () => {
         if (storage.restoreFromBackup(previewData.raw)) {
           showStatus('نجاح! تم استيراد كل السجلات بنجاح.', 'success');
           
-          // الحل الجذري لمشكلة googhttps: استخدام المسار النسبي الحالي
-          // هذا يضمن إعادة تحميل الصفحة دون العبث بالنطاق (Domain)
           setTimeout(() => {
             window.location.href = window.location.pathname;
           }, 1500);
@@ -233,43 +236,40 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* GitHub & Deployment Info Card */}
-      <div className="bg-slate-900 text-white p-6 md:p-12 rounded-[3rem] shadow-2xl overflow-hidden relative group">
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-          <Github size={160} />
+      {/* Sync Status Card (Replaces GitHub) */}
+      <div className="bg-white p-6 md:p-10 rounded-[3rem] shadow-sm border border-slate-200 overflow-hidden relative">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+            <CalendarClock size={28} />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">حالة المزامنة والبيانات</h3>
+            <p className="text-xs font-bold text-slate-400">سجل عمليات التحديث وتاريخ الاستيراد</p>
+          </div>
         </div>
         
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md">
-              <Globe className="text-indigo-400" size={28} />
-            </div>
-            <h3 className="text-2xl font-black">جاهز للنشر على GitHub</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex flex-col justify-center">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">تاريخ آخر استيراد ناجح</p>
+            <p className="text-lg font-black text-slate-800">
+              {lastImportDate ? new Date(lastImportDate).toLocaleString('ar-DZ', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 'لم يتم إجراء أي استيراد بعد'}
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <p className="text-slate-300 text-sm leading-relaxed">
-                هذا النظام مصمم بتقنيات **Frontend-only**، مما يعني أنه يمكنك استضافته مجاناً وبأمان تام على **GitHub Pages**.
+          
+          <div className="flex items-start gap-4 p-6 bg-indigo-50/30 rounded-[2rem] border border-indigo-100">
+            <ShieldCheck className="text-indigo-600 shrink-0" size={32} />
+            <div className="space-y-2">
+              <p className="text-xs font-black text-indigo-900">أمن وسلامة البيانات</p>
+              <p className="text-[10px] font-bold text-slate-500 leading-relaxed">
+                يتم تخزين كافة بياناتك محلياً في متصفحك بشكل مشفر. لضمان عدم ضياع العمل عند تغيير المتصفح أو حذف ذاكرة التخزين المؤقت، يرجى إجراء "تصدير البيانات" بانتظام.
               </p>
-              <ul className="space-y-2 text-xs font-bold text-slate-400">
-                <li className="flex items-center gap-2 text-emerald-400"><CheckCircle2 size={14} /> لا يحتاج لخادم أو MySQL</li>
-                <li className="flex items-center gap-2 text-emerald-400"><CheckCircle2 size={14} /> يعمل كـ Progressive Web App</li>
-                <li className="flex items-center gap-2 text-emerald-400"><CheckCircle2 size={14} /> آمن تماماً من ثغرات الحقن</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 space-y-4">
-              <div className="flex items-center gap-2 text-indigo-400 font-black text-sm">
-                <Info size={16} />
-                <span>كيفية الرفع؟</span>
-              </div>
-              <ol className="text-[10px] space-y-2 text-slate-300 list-decimal pr-4">
-                <li>قم بإنشاء مستودع جديد على GitHub.</li>
-                <li>ارفع كافة الملفات الحالية للمستودع.</li>
-                <li>من الإعدادات، قم بتفعيل GitHub Pages.</li>
-                <li>مبروك! موقعك الآن متاح للعالم مجاناً.</li>
-              </ol>
             </div>
           </div>
         </div>

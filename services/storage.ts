@@ -6,6 +6,7 @@ const KEYS = {
   CLASSES: 'ams_v3_classes',
   ATTENDANCE: 'ams_v3_attendance',
   INITIALIZED: 'ams_v3_initialized',
+  LAST_IMPORT: 'ams_v3_last_import',
 };
 
 const DEFAULT_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
@@ -31,7 +32,6 @@ export const storage = {
       if (isInitialized === 'true') return [];
     } catch (e) {}
     
-    // Fix: Added missing 'teacherName' property to match Class interface definition
     return [
       { id: 'c1', name: 'القسم الأول', schoolName: 'مدرسة النجاح الابتدائية', teacherName: '..........................', startTime: '08:00', endTime: '12:00', days: DEFAULT_DAYS },
       { id: 'c2', name: 'القسم الثاني', schoolName: 'مدرسة النجاح الابتدائية', teacherName: '..........................', startTime: '13:00', endTime: '17:00', days: DEFAULT_DAYS }
@@ -54,6 +54,10 @@ export const storage = {
     localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(records));
   },
   
+  getLastImportDate: (): string | null => {
+    return localStorage.getItem(KEYS.LAST_IMPORT);
+  },
+  
   getFullBackup: (): FullBackup => {
     return {
       students: storage.getStudents(),
@@ -71,6 +75,9 @@ export const storage = {
       if (backup.students) localStorage.setItem(KEYS.STUDENTS, JSON.stringify(backup.students));
       if (backup.classes) localStorage.setItem(KEYS.CLASSES, JSON.stringify(backup.classes));
       if (backup.attendance) localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(backup.attendance));
+      
+      const now = new Date().toISOString();
+      localStorage.setItem(KEYS.LAST_IMPORT, now);
       localStorage.setItem(KEYS.INITIALIZED, 'true');
       return true;
     } catch (e) {

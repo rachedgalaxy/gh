@@ -139,12 +139,12 @@ const StudentManagement: React.FC = () => {
           </label>
         </div>
 
-        <div className="relative flex-1 max-w-xl">
-          <Search className="absolute right-4 top-4.5 text-slate-500" size={20} />
+        <div className="relative flex-1 max-w-xl flex items-center">
+          <Search className="absolute right-5 text-slate-400 pointer-events-none" size={20} />
           <input 
             type="text" 
             placeholder="ابحث برقم التعريف أو الاسم..." 
-            className="w-full pr-12 pl-4 py-4 bg-slate-50 border-slate-300 rounded-2xl focus:ring-2 focus:ring-blue-600 focus:bg-white font-black text-slate-950 placeholder:text-slate-500 transition-all outline-none"
+            className="w-full pr-14 pl-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-600 focus:bg-white font-black text-slate-950 placeholder:text-slate-400 transition-all outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
