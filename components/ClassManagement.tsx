@@ -6,7 +6,7 @@ import {
   Trash2, Plus, Clock, CalendarDays, School, Edit3, 
   CheckCircle2, UserPlus, FileSpreadsheet, Users, 
   X, Search, UserMinus, AlertTriangle, ShieldAlert,
-  AlertOctagon, KeyRound, Eraser, AlertCircle, Building2, User
+  AlertOctagon, KeyRound, Eraser, AlertCircle, Building2, User, UserCheck
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -36,6 +36,8 @@ const ClassManagement: React.FC = () => {
     endTime: '12:00',
     days: WEEK_DAYS.slice(0, 5)
   });
+
+  const [quickStudent, setQuickStudent] = useState({ id: '', name: '' });
 
   useEffect(() => {
     setClasses(storage.getClasses());
@@ -71,6 +73,22 @@ const ClassManagement: React.FC = () => {
     setClasses(updatedClasses);
     storage.saveClasses(updatedClasses);
     resetForm();
+  };
+
+  const handleAddQuickStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedClassForStudents || !quickStudent.id || !quickStudent.name) return;
+
+    const all = storage.getStudents();
+    if (all.some(s => s.id === quickStudent.id)) {
+      alert('هذا الرقم التعريفي مستخدم بالفعل');
+      return;
+    }
+
+    const updated = [...all, { ...quickStudent, classId: selectedClassForStudents.id }];
+    storage.saveStudents(updated);
+    setQuickStudent({ id: '', name: '' });
+    refreshStudentList();
   };
 
   const handleImportStudents = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,15 +130,19 @@ const ClassManagement: React.FC = () => {
       } catch (err) { alert('خطأ في القراءة.'); }
     };
     reader.readAsBinaryString(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleConfirmAction = () => {
     if (securityCode !== '6723' || !pendingDelete) return;
-    // Logic for deletion remains same
+    
     if (pendingDelete.type === 'class' && pendingDelete.id) {
       const updatedClasses = classes.filter(cls => cls.id !== pendingDelete.id);
       setClasses(updatedClasses);
       storage.saveClasses(updatedClasses);
+      // Cleanup students
+      const allS = storage.getStudents();
+      storage.saveStudents(allS.filter(s => s.classId !== pendingDelete.id));
     } else if (pendingDelete.type === 'student' && pendingDelete.id) {
       const all = storage.getStudents();
       storage.saveStudents(all.filter(s => s.id !== pendingDelete.id));
@@ -128,7 +150,7 @@ const ClassManagement: React.FC = () => {
     } else if (pendingDelete.type === 'clear_all' && selectedClassForStudents) {
       const all = storage.getStudents();
       storage.saveStudents(all.filter(s => s.classId !== selectedClassForStudents.id));
-      setClassStudents([]);
+      refreshStudentList();
     }
     setPendingDelete(null);
     setSecurityCode('');
@@ -234,7 +256,99 @@ const ClassManagement: React.FC = () => {
         ))}
       </div>
 
-      {/* Security Modals remain the same */}
+      {/* Student List Modal */}
+      {selectedClassForStudents && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95">
+            <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-600 p-3 rounded-2xl text-white"><Users size={24} /></div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900">قائمة تلاميذ: {selectedClassForStudents.name}</h3>
+                  <p className="text-xs font-bold text-slate-400">{selectedClassForStudents.schoolName}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedClassForStudents(null)} className="p-2 text-slate-400 hover:text-slate-900 transition-all"><X size={28} /></button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-6 overflow-y-auto">
+              {/* Quick Add Form */}
+              <form onSubmit={handleAddQuickStudent} className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <div className="md:col-span-1">
+                  <input 
+                    type="text" 
+                    placeholder="رقم التعريف" 
+                    className="w-full bg-white border-slate-200 rounded-xl px-4 py-2.5 font-black text-sm outline-none focus:ring-2 focus:ring-blue-600"
+                    value={quickStudent.id}
+                    onChange={e => setQuickStudent({...quickStudent, id: e.target.value})}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <input 
+                    type="text" 
+                    placeholder="اسم التلميذ الكامل" 
+                    className="w-full bg-white border-slate-200 rounded-xl px-4 py-2.5 font-black text-sm outline-none focus:ring-2 focus:ring-blue-600"
+                    value={quickStudent.name}
+                    onChange={e => setQuickStudent({...quickStudent, name: e.target.value})}
+                  />
+                </div>
+                <button type="submit" className="bg-blue-600 text-white rounded-xl font-black text-xs px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-blue-700">
+                  <UserPlus size={16} /> إضافة تلميذ
+                </button>
+              </form>
+
+              <div className="flex justify-between items-center px-2">
+                <p className="text-sm font-black text-slate-500">العدد الإجمالي: {classStudents.length} تلميذ</p>
+                <div className="flex gap-2">
+                  <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 font-black text-xs hover:bg-emerald-100 transition-all">
+                    <FileSpreadsheet size={16} /> استيراد Excel
+                  </button>
+                  <button onClick={() => setPendingDelete({ type: 'clear_all', name: 'كافة تلاميذ القسم' })} className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-xl border border-rose-100 font-black text-xs hover:bg-rose-100 transition-all">
+                    <Eraser size={16} /> مسح القائمة
+                  </button>
+                </div>
+              </div>
+
+              <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                <table className="w-full text-right border-collapse">
+                  <thead className="bg-slate-50 text-xs font-black text-slate-400 border-b border-slate-100">
+                    <tr>
+                      <th className="px-6 py-4">الرقم</th>
+                      <th className="px-6 py-4">اسم التلميذ</th>
+                      <th className="px-6 py-4 text-center">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {classStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-6 py-12 text-center text-slate-300 font-bold">لا يوجد تلاميذ في هذا القسم حالياً</td>
+                      </tr>
+                    ) : (
+                      classStudents.map(student => (
+                        <tr key={student.id} className="hover:bg-slate-50/50">
+                          <td className="px-6 py-3 font-mono text-xs font-black text-slate-500">{student.id}</td>
+                          <td className="px-6 py-3 font-black text-slate-900">{student.name}</td>
+                          <td className="px-6 py-3 text-center">
+                            <button onClick={() => setPendingDelete({ type: 'student', id: student.id, name: student.name })} className="p-2 text-slate-400 hover:text-red-600 transition-all">
+                              <UserMinus size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-slate-50 border-t border-slate-100 text-center">
+              <button onClick={() => setSelectedClassForStudents(null)} className="px-12 py-3 bg-slate-900 text-white rounded-2xl font-black shadow-lg hover:bg-black">إغلاق النافذة</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Security Modals */}
       {pendingDelete && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl border-t-8 border-red-600 animate-in zoom-in-95">
@@ -242,6 +356,7 @@ const ClassManagement: React.FC = () => {
             <div className="text-center">
               <h3 className="text-2xl font-black text-slate-900">تأكيد الإجراء</h3>
               <p className="text-slate-500 font-bold mt-2 leading-relaxed">هل أنت متأكد من حذف <span className="text-red-600">"{pendingDelete.name}"</span>؟</p>
+              {pendingDelete.type === 'clear_all' && <p className="text-[10px] text-red-400 font-bold mt-2">سيتم حذف كافة سجلات هذا القسم نهائياً!</p>}
             </div>
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-black text-slate-700">أدخل رمز الأمان (6723):</label>
@@ -249,7 +364,7 @@ const ClassManagement: React.FC = () => {
             </div>
             <div className="flex flex-col gap-3 pt-2">
               <button onClick={handleConfirmAction} disabled={securityCode !== '6723'} className="w-full bg-red-600 text-white py-4 rounded-2xl font-black disabled:opacity-30">تأكيد التنفيذ</button>
-              <button onClick={() => setPendingDelete(null)} className="w-full text-slate-400 py-2 font-black">تراجع</button>
+              <button onClick={() => { setPendingDelete(null); setSecurityCode(''); }} className="w-full text-slate-400 py-2 font-black">تراجع</button>
             </div>
           </div>
         </div>
